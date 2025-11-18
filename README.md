@@ -1,22 +1,54 @@
-# PHP script to track a history of client public IP addresses
+# PHP script to track public IP addresses over time
 
-## Server side
+A simple PHP-based procedure to store a timestamped history of client public IP addresses as a JSON structure.
 
-### Directory and file structure:
+## Server side file structure
 
 * `.ip` (hidden root directory)
   * `index.html` (empty file to prevent automatic content display)
-  * `some-uuid` (directory named using a unique identifier known only by the client)
-    * `index.php` (copy of `public-ip-history.php`)
+  * [`public-ip-history.php`](public-ip-history.php) (main script, referenced by `index.php`)
+  * `some-uuid` (directory named using a unique identifier dedicated to one client only)
+    * [`index.php`](index.php) as follows:
 
-### Usage
+```php
+<?php
+$ipHistoryFileName = '../some-history.json';
+require_once('../public-ip-history.php');
+?>
+```
 
-Requesting `/.ip/some-uuid/` will trigger `index.php`,
-which will track the client IP address in `/.ip/history.json`.
+## Manual usage
 
-### History format
+Requesting `/.ip/some-uuid/` will trigger `index.php` execution,
+which will track the client IP address in `/.ip/some-history.json`.
 
-Example of `history.json` file:
+To keep it simple, no constraint is put on the HTTP verb to be used.
+
+It can so be triggered easily from any web browser,
+HTTP client (`curl`, `wget`, `bruno`...),
+or custom application.
+
+## Automatic and recurring usage
+
+On Linux, create a file `/etc/cron.d/public-ip-history` with the following content,
+so that the current IP address is tracked every 10 minutes:
+
+```cron
+*/10 * * * *  user  (cd /tmp; wget -O- http://some.domain.ext/.ip/some-uuid/ >pub-ip.out 2>pub-ip.err)
+```
+
+These can be changed to your liking:
+* `public-ip-history`, `pub-ip.out`, ` pub-ip.err`: file names
+* `some-uuid`: unique caller/client identifier
+* `10`: time interval in minutes
+
+These should be changed to fit your technical context:
+* `user`: the Linux user to be used to run the command
+* `http://some.domain.ext/`: the root URL of the server used to track IP addresses
+
+## History file format
+
+Example of `some-history.json` file:
 
 ```json
 [
@@ -33,17 +65,6 @@ Example of `history.json` file:
 ]
 ```
 
-## Client side
+Entries are ordered from newest to oldest.
 
-### Store current IP
-
-Create a file `/etc/cron.d/public-ip-history`, with the following content,
-to call the server and store current IP address every 10 minutes:
-
-```cron
-*/10 * * * *   user   ( cd /tmp ; wget -O- http://my.domain.net/.ip/some-uuid/ >public-ip.out 2>public-ip.err )
-```
-
-### Display public IP history
-
-Visit page `http://my.domain.net/.ip/history.json` to display the public IP history.
+Timestamps are in the following sortable format: `YEAR-MONTH-DAY,HOURS:MINUTES:SECONDS`

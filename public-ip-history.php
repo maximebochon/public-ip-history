@@ -1,7 +1,7 @@
 <?php
 
-// Chemin vers le fichier d'historique d'adresse IP
-$ipHistoryFileName = '../history.json';
+// Chemin vers le fichier d'historique d'adresse IP (prédéfini ou mis à une valeur par défaut)
+defined('ipHistoryFileName') or define('ipHistoryFileName', '../history.json');
 
 // Format d'horodatage, fuseau Français et instant courant
 date_default_timezone_set('Europe/Paris');
